@@ -3,7 +3,6 @@
 import './App.css';
 import NavBar from './components/NavBar';
 import Team from './components/Team';
-import Testimonials from './components/Testimonials';
 import ServiceDetails from './components/ServiceDetails';
 import ContactForm from './components/ContactForm';
 
@@ -53,7 +52,6 @@ function App() {
 
         <ServiceDetails />
         <Team />
-        <Testimonials />
         <ContactForm />
         <section id="contact-info" className="section" style={{padding: '2rem', textAlign: 'center'}}>
           <h2>Contact Information</h2>

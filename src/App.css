@@ -1,28 +1,28 @@
 body {
   margin: 0;
-  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-  background: #f0f2f5;
-  color: #222;
+  background: #f7f8fc;
+  color: #1f2937;
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0;
-  text-align: left;
-}
-.section {
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  margin-bottom: 2rem;
+  min-height: 100vh;
 }
 
 main {
-  margin-top: 2rem;
+  width: min(100% - 2rem, 1100px);
+  margin: 2rem auto 4rem;
 }
 
-section h1, section h2 {
+.section {
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+section h1,
+section h2 {
   color: #1a237e;
+  line-height: 1.2;
 }
 
 section ul {
@@ -31,40 +31,4 @@ section ul {
 
 section ul li {
   margin-bottom: 0.5rem;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
