@@ -17,7 +17,7 @@ test('contact form is a real Netlify form with explicit labels', () => {
   assert.match(form, /data-netlify="true"/);
   assert.match(form, /form-name/);
   assert.match(form, /URLSearchParams/);
-  assert.match(form, /fetch\(['"]\/['"]/);
+  assert.match(form, /fetch\(['"]\/__forms\.html['"]/);
   assert.match(form, /<label/);
 });
 
