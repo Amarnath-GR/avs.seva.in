@@ -3,13 +3,8 @@
 // The verification token is read from WHATSAPP_VERIFY_TOKEN at runtime.
 // Only message metadata is logged. Message bodies are never stored.
 
-// Temporary fallback so webhook verification can complete before the Netlify
-// environment variable WHATSAPP_VERIFY_TOKEN is set. Replaced by the env var
-// once Netlify environment variables are configured.
-const FALLBACK_VERIFY_TOKEN = 'i7VVQMYFjboUxUSUZb76WKBGJobD-2t6';
-
 export default async (request) => {
-  const expected = process.env.WHATSAPP_VERIFY_TOKEN || FALLBACK_VERIFY_TOKEN;
+  const expected = process.env.WHATSAPP_VERIFY_TOKEN;
 
   if (request.method === 'GET') {
     const params = new URL(request.url).searchParams;
