@@ -50,6 +50,10 @@ function signatureIsValid(rawBody, header, appSecret) {
   return safeEqual(expected, header);
 }
 
+// NOTE: env-binding freshness check. If a signature that should pass starts
+// failing again, this comment is the marker: it forces a new function hash so
+// Netlify re-uploads the bundle and re-binds WHATSAPP_APP_SECRET at runtime.
+// A redeploy of an unchanged function does not necessarily refresh the binding.
 export default async (request) => {
   const expected = process.env.WHATSAPP_VERIFY_TOKEN;
 
