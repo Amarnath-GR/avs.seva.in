@@ -21,7 +21,13 @@ const MAX_MESSAGES = 50;
 // Stable pseudonym for a sender. Lets us correlate a conversation without
 // storing the phone number itself.
 function pseudonymise(phone) {
-  const salt = process.env.WHATSAPP_LOG_SALT || 'avs-seva';
+  // No fallback salt. A hardcoded default would make the pseudonym guessable
+  // and would also put a literal secret-looking string in source.
+  const salt = process.env.WHATSAPP_LOG_SALT;
+  if (!salt) {
+    console.error(JSON.stringify({ event: 'whatsapp_config_error', reason: 'log_salt_not_configured' }));
+    return 'unconfigured';
+  }
   return createHash('sha256').update(`${salt}:${String(phone)}`).digest('hex').slice(0, 16);
 }
 
