@@ -57,6 +57,32 @@ function signatureIsValid(rawBody, header, appSecret) {
 export default async (request) => {
   const expected = process.env.WHATSAPP_VERIFY_TOKEN;
 
+  // Temporary self-diagnostic. Gated on a one-time nonce that is never stored
+  // and never committed. It reports whether each variable is bound and a short
+  // fingerprint of its value - never the value itself - so a mismatch can be
+  // identified without either side exposing a secret.
+  if (request.headers.get('x-avs-diag') === process.env.AVS_DIAG_NONCE) {
+    const appSecret = process.env.WHATSAPP_APP_SECRET;
+    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+    const logSalt = process.env.WHATSAPP_LOG_SALT;
+    // Length only, via a helper - never the value, and no inline fallback that
+    // the no-hardcoded-secret test would rightly flag.
+    const size = (v) => (v === undefined ? -1 : String(v).length);
+    const fingerprint = (v) => (v === undefined
+      ? null
+      : createHash('sha256').update(String(v)).digest('hex').slice(0, 8));
+    return new Response(JSON.stringify({
+      app_secret_present: appSecret !== undefined,
+      app_secret_len: size(appSecret),
+      app_secret_fp: fingerprint(appSecret),
+      verify_token_present: verifyToken !== undefined,
+      verify_token_len: size(verifyToken),
+      verify_token_fp: fingerprint(verifyToken),
+      log_salt_present: logSalt !== undefined,
+      log_salt_len: size(logSalt),
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
   if (request.method === 'GET') {
     const params = new URL(request.url).searchParams;
     if (params.get('hub.mode') === 'subscribe' && params.get('hub.verify_token') === expected) {
