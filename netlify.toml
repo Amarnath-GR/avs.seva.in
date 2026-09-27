@@ -1,16 +1,19 @@
 [build]
   command = "npm run build"
   publish = "dist"
-  # These are server-only Netlify Function variables, read via process.env in
-  # netlify/functions/whatsapp-webhook.mjs. Their VALUES are never in the repo
-  # and never reach the client bundle (nothing here is VITE_-prefixed), but
-  # Netlify's secrets scanner flags the variable names and fails the build.
-  # This allowlists the two keys. The scanner stays fully enabled for
-  # everything else - a real credential in source will still fail the build.
-  SECRETS_SCAN_OMIT_KEYS = ["WHATSAPP_LOG_SALT", "WHATSAPP_VERIFY_TOKEN", "WHATSAPP_APP_SECRET"]
 
 [build.environment]
   NODE_VERSION = "22"
+  # These are server-only Netlify Function variables, read via process.env in
+  # netlify/functions/whatsapp-webhook.mjs. Their values are never in the repo
+  # and never reach the client bundle (nothing here is VITE_-prefixed), but
+  # smart detection matches the high-entropy values and fails the build.
+  #
+  # SECRETS_SCAN_* are environment variables in their own right, so they must
+  # live in [build.environment]. Listing them under [build] has no effect.
+  # The scanner stays fully enabled for everything else - a real credential
+  # committed to source will still fail the build.
+  SECRETS_SCAN_OMIT_KEYS = "WHATSAPP_LOG_SALT,WHATSAPP_VERIFY_TOKEN,WHATSAPP_APP_SECRET"
 
 [[headers]]
   for = "/*"
