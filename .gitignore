@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local run data and secrets must never be committed
+private/
+.env
+.env.*
