@@ -50,6 +50,99 @@ function signatureIsValid(rawBody, header, appSecret) {
   return safeEqual(expected, header);
 }
 
+// --- Chat bridge -----------------------------------------------------------
+// The Python engine lives on the VPS. We forward each verified payload there
+// and send the returned reply back through the Cloud API. Failures here are
+// logged and swallowed: a webhook that throws would make Meta retry the same
+// event indefinitely, which is worse than a missed reply.
+
+const BRIDGE_TIMEOUT_MS = 8000;
+const MAX_REPLY_CHARS = 4096;
+
+function bridgeConfig() {
+  const url = process.env.AVS_BRIDGE_URL;
+  const secret = process.env.AVS_BRIDGE_SECRET;
+  if (!url || !secret) return null;
+  return { url, secret };
+}
+
+async function sendWhatsAppText(to, text) {
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!token || !phoneNumberId) {
+    console.error(JSON.stringify({ event: 'whatsapp_send_skipped', reason: 'credentials_missing' }));
+    return false;
+  }
+  const endpoint = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to,
+      type: 'text',
+      text: { preview_url: false, body: String(text).slice(0, MAX_REPLY_CHARS) },
+    }),
+  });
+  if (!res.ok) {
+    console.warn(JSON.stringify({ event: 'whatsapp_send_failed', status: res.status }));
+    return false;
+  }
+  return true;
+}
+
+async function forwardToBridge(payload) {
+  const config = bridgeConfig();
+  if (!config) {
+    console.warn(JSON.stringify({ event: 'whatsapp_bridge_skipped', reason: 'not_configured' }));
+    return { handled: 0, replied: 0 };
+  }
+
+  let body;
+  try {
+    const res = await fetch(config.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Avs-Bridge-Secret': config.secret },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      console.warn(JSON.stringify({ event: 'whatsapp_bridge_error', status: res.status }));
+      return { handled: 0, replied: 0 };
+    }
+    body = await res.json();
+  } catch (err) {
+    // Never let a bridge failure become a webhook failure.
+    console.warn(JSON.stringify({ event: 'whatsapp_bridge_unreachable', reason: String(err && err.name) }));
+    return { handled: 0, replied: 0 };
+  }
+
+  const messages = [];
+  for (const entry of (payload.entry || []).slice(0, MAX_ENTRIES)) {
+    for (const change of (entry.changes || []).slice(0, MAX_CHANGES)) {
+      for (const m of ((change.value || {}).messages || []).slice(0, MAX_MESSAGES)) {
+        messages.push(m);
+      }
+    }
+  }
+
+  let replied = 0;
+  const results = (body && body.results) || [];
+  for (let i = 0; i < messages.length; i += 1) {
+    const to = messages[i].from;
+    const reply = results[i] && results[i].reply;
+    if (!to || !reply) continue;
+    try {
+      if (await sendWhatsAppText(to, reply)) replied += 1;
+    } catch (err) {
+      console.warn(JSON.stringify({ event: 'whatsapp_send_error', reason: String(err && err.name) }));
+    }
+  }
+
+  return { handled: (body && body.handled) || messages.length, replied };
+}
+
 // NOTE: env-binding freshness check. If a signature that should pass starts
 // failing again, this comment is the marker: it forces a new function hash so
 // Netlify re-uploads the bundle and re-binds WHATSAPP_APP_SECRET at runtime.
@@ -141,6 +234,15 @@ export default async (request) => {
       }
     }
   }
+
+  // Forward to the VPS chat bridge, which runs the Python engine. The bridge
+  // URL and shared secret come from the environment; neither is in source.
+  const results = await forwardToBridge(payload);
+  console.log(JSON.stringify({
+    event: 'whatsapp_bridge',
+    handled: results.handled,
+    replied: results.replied,
+  }));
 
   return new Response('EVENT_RECEIVED', { status: 200 });
 };
