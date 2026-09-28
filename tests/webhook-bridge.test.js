@@ -184,12 +184,13 @@ test('an oversized body is refused with 413, correctly signed or not', async () 
 });
 
 test('a normal-sized body is still processed after the size check moved', async () => {
-  const restore = captureLogs();
+  const realLog = console.log;
+  console.log = () => {};
   try {
     const body = messageBody('hi');
     const res = await post(body, sign(body));
     assert.equal(res.status, 200);
-  } finally { restore(); }
+  } finally { console.log = realLog; }
 });
 
 test('the raw phone number is never written to the log', async () => {
