@@ -19,11 +19,6 @@ const APP_SECRET = 'test-app-secret';
 const sign = (body, secret = APP_SECRET) =>
   'sha256=' + createHmac('sha256', secret).update(body, 'utf8').digest('hex');
 
-function messageBody(text, from = '919999999999', type = 'text') {
-  const msg = { from, type, timestamp: '1' };
-  if (type === 'text') msg.text = { body: text };
-  return JSON.stringify({ entry: [{ changes: [{ value: { messages: [msg] } }] }] });
-}
 
 const post = (body, signature) =>
   handler(new Request('https://example.test/wh', {
@@ -80,6 +75,91 @@ test('the Graph API token is sent as a bearer header, not in the body', async ()
   assert.equal(/access_token/.test(src), false);
 });
 
+function messageBody(text, from = '919999999999', type = 'text', id) {
+  const msg = { from, type, timestamp: '1' };
+  if (id) msg.id = id;
+  if (type === 'text') msg.text = { body: text };
+  return JSON.stringify({ entry: [{ changes: [{ value: { messages: [msg] } }] }] });
+}
+
+// A payload with explicit ids on every message, so replies can be matched.
+const multiBody = JSON.stringify({
+  entry: [{ changes: [{ value: { messages: [
+    { id: 'wamid.FIRST', from: '919000000001', type: 'text', timestamp: '1', text: { body: 'a' } },
+    { id: 'wamid.SECOND', from: '919000000002', type: 'text', timestamp: '1', text: { body: 'b' } },
+  ] } }] }],
+});
+
+// Stubs the Cloud API so we can see exactly which recipient got which reply.
+function captureSends(bridgeResponse) {
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  const realLog = console.log;
+  const realWarn = console.warn;
+  console.log = () => {};
+  console.warn = () => {};
+  process.env.AVS_BRIDGE_URL = 'https://bridge.test/webhook';
+  process.env.AVS_BRIDGE_SECRET = 'x'.repeat(32);
+  process.env.WHATSAPP_ACCESS_TOKEN = 'test-token';
+  process.env.WHATSAPP_PHONE_NUMBER_ID = '12345';
+  globalThis.fetch = async (url, opts) => {
+    if (String(url).includes('graph.facebook.com')) {
+      calls.push(JSON.parse(opts.body));
+      return new Response('{}', { status: 200 });
+    }
+    return new Response(JSON.stringify(bridgeResponse),
+                        { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+  return () => {
+    globalThis.fetch = realFetch;
+    console.log = realLog;
+    console.warn = realWarn;
+    delete process.env.AVS_BRIDGE_URL;
+    delete process.env.AVS_BRIDGE_SECRET;
+    delete process.env.WHATSAPP_ACCESS_TOKEN;
+    delete process.env.WHATSAPP_PHONE_NUMBER_ID;
+    return calls;
+  };
+}
+
+test('replies are matched by message id, not by position', async () => {
+  // The bridge drops duplicates, so results can be shorter than the messages
+  // sent. Positional matching would then send sender one the second sender's
+  // reply. This is the test that would catch that.
+  const restore = captureSends({ ok: true, handled: 1, results: [
+    { id: 'wamid.SECOND', action: 'advance', reply: 'reply for the second sender' },
+  ] });
+  try {
+    await post(multiBody, sign(multiBody));
+    const calls = restore();
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].to, '919000000002');
+    assert.match(calls[0].text.body, /second sender/);
+  } finally { restore(); }
+});
+
+test('a duplicate dropped by the bridge gets no reply', async () => {
+  const restore = captureSends({ ok: true, handled: 0, duplicates_dropped: 1, results: [] });
+  try {
+    await post(multiBody, sign(multiBody));
+    assert.equal(restore().length, 0);
+  } finally { restore(); }
+});
+
+test('position fallback still works for a bridge that returns no ids', async () => {
+  const restore = captureSends({ ok: true, handled: 2, results: [
+    { action: 'advance', reply: 'first reply' },
+    { action: 'advance', reply: 'second reply' },
+  ] });
+  try {
+    await post(multiBody, sign(multiBody));
+    const calls = restore();
+    assert.equal(calls.length, 2);
+    assert.match(calls[0].text.body, /first reply/);
+    assert.match(calls[1].text.body, /second reply/);
+  } finally { restore(); }
+});
+
 test('a bridge failure cannot turn the webhook into an error', async () => {
   // Point the bridge at a closed port. The handler must still return 200 so
   // Meta does not retry the same event forever.
@@ -90,4 +170,17 @@ test('a bridge failure cannot turn the webhook into an error', async () => {
   assert.equal(res.status, 200);
   delete process.env.AVS_BRIDGE_URL;
   delete process.env.AVS_BRIDGE_SECRET;
+});
+
+test('the raw phone number is never written to the log', async () => {
+  const realLog = console.log;
+  const lines = [];
+  console.log = (...a) => lines.push(a.join(' '));
+  try {
+    const body = messageBody('hi', '919000000777');
+    await post(body, sign(body));
+  } finally { console.log = realLog; }
+  const joined = lines.join('\n');
+  assert.ok(joined.length > 0, 'expected the handler to log something');
+  assert.ok(!joined.includes('919000000777'), 'raw phone number leaked into the log');
 });

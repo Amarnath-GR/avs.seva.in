@@ -129,9 +129,21 @@ async function forwardToBridge(payload) {
 
   let replied = 0;
   const results = (body && body.results) || [];
+
+  // Match by message id, never by position. The bridge may drop duplicates or
+  // exceed a cap, so index i in results is not necessarily index i in
+  // messages. Matching positionally would send a customer someone else's
+  // reply. Fall back to position only when no ids are present at all.
+  const hasIds = results.some((r) => r && r.id);
+  const byId = new Map();
+  for (const r of results) {
+    if (r && r.id) byId.set(r.id, r);
+  }
+
   for (let i = 0; i < messages.length; i += 1) {
     const to = messages[i].from;
-    const reply = results[i] && results[i].reply;
+    const result = hasIds ? byId.get(messages[i].id) : results[i];
+    const reply = result && result.reply;
     if (!to || !reply) continue;
     try {
       if (await sendWhatsAppText(to, reply)) replied += 1;
@@ -143,18 +155,10 @@ async function forwardToBridge(payload) {
   return { handled: (body && body.handled) || messages.length, replied };
 }
 
-// NOTE: env-binding freshness check. If a signature that should pass starts
-// failing again, this comment is the marker: it forces a new function hash so
-// Netlify re-uploads the bundle and re-binds WHATSAPP_APP_SECRET at runtime.
-// A redeploy of an unchanged function does not necessarily refresh the binding.
 export default async (request) => {
   const expected = process.env.WHATSAPP_VERIFY_TOKEN;
 
-  // Temporary self-diagnostic. Gated on a one-time nonce that is never stored
-  // and never committed. It reports whether each variable is bound and a short
-  // fingerprint of its value - never the value itself - so a mismatch can be
-  // identified without either side exposing a secret.
-if (request.method === 'GET') {
+  if (request.method === 'GET') {
     const params = new URL(request.url).searchParams;
     if (params.get('hub.mode') === 'subscribe' && params.get('hub.verify_token') === expected) {
       return new Response(params.get('hub.challenge') || '', { status: 200 });
