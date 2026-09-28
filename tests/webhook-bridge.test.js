@@ -172,6 +172,26 @@ test('a bridge failure cannot turn the webhook into an error', async () => {
   delete process.env.AVS_BRIDGE_SECRET;
 });
 
+test('an oversized body is refused with 413, correctly signed or not', async () => {
+  const big = 'x'.repeat(600 * 1024);
+  // Correctly signed: size is checked before the signature, so the reason
+  // reported is the real one.
+  const signed = await post(big, sign(big));
+  assert.equal(signed.status, 413, 'a signed oversized body must be 413');
+  // Unsigned oversized: still 413, still refused, still no work done.
+  const unsigned = await post(big, null);
+  assert.equal(unsigned.status, 413);
+});
+
+test('a normal-sized body is still processed after the size check moved', async () => {
+  const restore = captureLogs();
+  try {
+    const body = messageBody('hi');
+    const res = await post(body, sign(body));
+    assert.equal(res.status, 200);
+  } finally { restore(); }
+});
+
 test('the raw phone number is never written to the log', async () => {
   const realLog = console.log;
   const lines = [];

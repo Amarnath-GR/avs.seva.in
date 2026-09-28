@@ -177,11 +177,18 @@ export default async (request) => {
   } catch {
     return new Response('unreadable body', { status: 400 });
   }
+
+  const signature = request.headers.get('x-hub-signature-256');
+
+  // Size is checked before the signature, deliberately. HMAC over a huge body
+  // is wasted work, and returning 401 for an oversized request misreports the
+  // reason. It also matches the documented behaviour and the unit test.
   if (rawBody.length > MAX_BODY_BYTES) {
+    console.warn(JSON.stringify({ event: 'whatsapp_payload_too_large',
+                                  bytes: rawBody.length }));
     return new Response('payload too large', { status: 413 });
   }
 
-  const signature = request.headers.get('x-hub-signature-256');
   if (!signatureIsValid(rawBody, signature, process.env.WHATSAPP_APP_SECRET)) {
     console.warn(JSON.stringify({ event: 'whatsapp_signature_rejected' }));
     return new Response('invalid signature', { status: 401 });
