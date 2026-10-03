@@ -59,11 +59,24 @@ function signatureIsValid(rawBody, header, appSecret) {
 const BRIDGE_TIMEOUT_MS = 8000;
 const MAX_REPLY_CHARS = 4096;
 
-function bridgeConfig() {
-  const url = process.env.AVS_BRIDGE_URL;
+// Netlify refuses env writes on this plan, and a quick-tunnel hostname changes
+// on every restart anyway, so the URL is committed here rather than stored as
+// a secret. It is a public endpoint, not a credential; the shared secret is
+// still required by the bridge and stays in the environment.
+//
+// BRIDGE_HOSTS is tried in order so a single tunnel restart is a one-line
+// commit instead of a silent loss of every inbound message. AVS_BRIDGE_URL
+// still wins when set, so a proper named tunnel needs no code change.
+const BRIDGE_HOSTS = [
+  'https://exceed-paragraphs-regardless-referrals.trycloudflare.com',
+];
+
+function bridgeCandidates() {
   const secret = process.env.AVS_BRIDGE_SECRET;
-  if (!url || !secret) return null;
-  return { url, secret };
+  if (!secret) return [];
+  const configured = process.env.AVS_BRIDGE_URL;
+  if (configured) return [{ url: configured, secret }];
+  return BRIDGE_HOSTS.map((url) => ({ url, secret }));
 }
 
 async function sendWhatsAppText(to, text) {
@@ -93,28 +106,41 @@ async function sendWhatsAppText(to, text) {
 }
 
 async function forwardToBridge(payload) {
-  const config = bridgeConfig();
-  if (!config) {
-    console.warn(JSON.stringify({ event: 'whatsapp_bridge_skipped', reason: 'not_configured' }));
+  const candidates = bridgeCandidates();
+  if (candidates.length === 0) {
+    // Say which half is missing. Silently returning here is why an
+    // unconfigured bridge looked identical to a healthy one that simply had
+    // no traffic: Meta was told 200 and the message was dropped.
+    console.warn(JSON.stringify({
+      event: 'whatsapp_bridge_skipped',
+      reason: process.env.AVS_BRIDGE_SECRET ? 'no_url' : 'no_secret',
+    }));
     return { handled: 0, replied: 0 };
   }
 
-  let body;
-  try {
-    const res = await fetch(config.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Avs-Bridge-Secret': config.secret },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
-    });
-    if (!res.ok) {
-      console.warn(JSON.stringify({ event: 'whatsapp_bridge_error', status: res.status }));
-      return { handled: 0, replied: 0 };
+  let body = null;
+  let lastReason = 'unknown';
+  for (const config of candidates) {
+    try {
+      const res = await fetch(config.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Avs-Bridge-Secret': config.secret },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
+      });
+      if (!res.ok) {
+        lastReason = `status_${res.status}`;
+        continue;
+      }
+      body = await res.json();
+      break;
+    } catch (err) {
+      // Try the next host; a stale quick-tunnel URL is the expected failure.
+      lastReason = String(err && err.name);
     }
-    body = await res.json();
-  } catch (err) {
-    // Never let a bridge failure become a webhook failure.
-    console.warn(JSON.stringify({ event: 'whatsapp_bridge_unreachable', reason: String(err && err.name) }));
+  }
+  if (body === null) {
+    console.warn(JSON.stringify({ event: 'whatsapp_bridge_unreachable', reason: lastReason }));
     return { handled: 0, replied: 0 };
   }
 
