@@ -1,6 +1,12 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  # Without this, Netlify deploys the static build only and the WhatsApp
+  # function is silently absent: the live URL then returns 404 while Meta is
+  # still set to post to it, and every inbound message disappears with no
+  # error. Verified against a deploy that reported "ready" with no function
+  # files present.
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "22"
