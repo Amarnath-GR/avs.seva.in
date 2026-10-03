@@ -68,6 +68,11 @@ const MAX_REPLY_CHARS = 4096;
 // commit instead of a silent loss of every inbound message. AVS_BRIDGE_URL
 // still wins when set, so a proper named tunnel needs no code change.
 const BRIDGE_HOSTS = [
+  // A named Cloudflare tunnel, so this address does not change on restart.
+  'https://bridge.avsseva.in',
+  // The previous quick tunnel, kept only while it still resolves. A quick
+  // tunnel's hostname is random and dies with the process, so this is a
+  // short-lived fallback rather than a second permanent route.
   'https://exceed-paragraphs-regardless-referrals.trycloudflare.com',
 ];
 
