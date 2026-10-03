@@ -1,0 +1,81 @@
+/* Opt-in WhatsApp review request.
+   Visually a variant of the existing contact form so the page stays coherent,
+   with the button carrying the WhatsApp green so the action is obvious. */
+
+.whatsapp-lead {
+  padding: 3rem 2rem;
+  background: #f5f5f5;
+  text-align: center;
+}
+
+.whatsapp-lead-intro {
+  font-size: 1.08rem;
+  max-width: 620px;
+  margin: 0 auto 1.5rem;
+  color: #333;
+}
+
+.whatsapp-lead-form {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.whatsapp-lead-form .form-field {
+  margin-bottom: 1rem;
+}
+
+.whatsapp-lead-form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 500;
+}
+
+.whatsapp-lead-form input[type='text'] {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #b0bec5;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.whatsapp-lead-form input[type='text']:focus {
+  outline: 2px solid #1a237e;
+  outline-offset: 1px;
+  border-color: #1a237e;
+}
+
+/* Mark the invalid field only when the visitor has actually submitted. */
+.whatsapp-lead-form input[aria-invalid='true'] {
+  border-color: #b00020;
+}
+
+.whatsapp-lead-form button {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #25d366;
+  color: #05340a;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.whatsapp-lead-form button:hover {
+  background: #1eb455;
+}
+
+.whatsapp-lead-form button:focus-visible {
+  outline: 3px solid #1a237e;
+  outline-offset: 2px;
+}
+
+.whatsapp-lead-note {
+  max-width: 620px;
+  margin: 1.25rem auto 0;
+  font-size: 0.92rem;
+  color: #555;
+  text-align: left;
+}

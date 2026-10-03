@@ -5,6 +5,7 @@ import NavBar from './components/NavBar';
 import Team from './components/Team';
 import ServiceDetails from './components/ServiceDetails';
 import ContactForm from './components/ContactForm';
+import WhatsappLead from './components/WhatsappLead';
 
 
 function App() {
@@ -17,7 +18,8 @@ function App() {
           <p style={{fontSize: '1.3rem', maxWidth: 700, margin: '0 auto 1.5rem'}}>
             Your trusted partner for technology-driven community services and solutions. We empower, support, and uplift organizations through innovative IT programs and dedicated service.
           </p>
-          <a href="#contact-form" style={{background: '#1a237e', color: '#fff', padding: '0.8rem 2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 500, fontSize: '1.1rem', boxShadow: '0 2px 8px #1a237e22'}}>Get in Touch</a>
+          <a href="#free-review" style={{background: '#25d366', color: '#05340a', padding: '0.8rem 2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px #25d36633'}}>Free website review</a>
+          <a href="#contact-form" style={{background: '#1a237e', color: '#fff', padding: '0.8rem 2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 500, fontSize: '1.1rem', boxShadow: '0 2px 8px #1a237e22', marginLeft: '0.75rem'}}>Get in Touch</a>
         </section>
 
         <section id="about" className="section" style={{padding: '3rem 2rem'}}>
@@ -52,6 +54,7 @@ function App() {
 
         <ServiceDetails />
         <Team />
+        <WhatsappLead />
         <ContactForm />
         <section id="contact-info" className="section" style={{padding: '2rem', textAlign: 'center'}}>
           <h2>Contact Information</h2>
