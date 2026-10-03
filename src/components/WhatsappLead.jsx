@@ -67,8 +67,8 @@ export default function WhatsappLead() {
       <h2>Get a free website review on WhatsApp</h2>
       <p className="whatsapp-lead-intro">
         Enter your website and we&rsquo;ll send you a short, evidence-based
-        review of what&rsquo;s working and what isn&rsquo;t. No cost, and you
-        can ignore it if it&rsquo;s not useful.
+        review of what&rsquo;s working and what isn&rsquo;t. Free, and you can
+        ignore it if it&rsquo;s not useful.
       </p>
 
       <form className="whatsapp-lead-form" onSubmit={handleSubmit} noValidate>
@@ -98,6 +98,13 @@ export default function WhatsappLead() {
 
         <button type="submit">Open WhatsApp and send my review request</button>
       </form>
+
+      <p className="whatsapp-lead-note">
+        The review itself is free. It lists what is wrong, why it matters to a
+        visitor, and what to change first. If you want us to make those changes
+        for you, that&rsquo;s a paid job &mdash; we quote a fixed price and only
+        start once payment has cleared.
+      </p>
 
       <p className="whatsapp-lead-note">
         This opens WhatsApp with a message ready to send &mdash; you keep it
