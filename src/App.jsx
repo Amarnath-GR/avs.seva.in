@@ -14,6 +14,15 @@ function App() {
       <NavBar />
       <main>
         <section id="hero" style={{padding: '4rem 2rem', textAlign: 'center', background: 'linear-gradient(90deg, #e3f2fd 0%, #f5f5f5 100%)'}}>
+          {/* The hero is a pale gradient, so the logo's white background
+              disappears rather than showing as a box. */}
+          <img
+            src="/avs-logo-mark.png"
+            alt="AVS Seva Technologies"
+            width="256"
+            height="180"
+            style={{display: 'block', margin: '0 auto 1.25rem'}}
+          />
           <h1 style={{fontSize: '2.8rem', marginBottom: '1rem'}}>Welcome to AVS Seva Technologies Pvt Ltd</h1>
           <p style={{fontSize: '1.3rem', maxWidth: 700, margin: '0 auto 1.5rem'}}>
             Your trusted partner for technology-driven community services and solutions. We empower, support, and uplift organizations through innovative IT programs and dedicated service.
