@@ -6,7 +6,6 @@ import ContactForm from './components/ContactForm';
 import WhatsappLead from './components/WhatsappLead';
 
 const stats = [
-  { value: '8+', label: 'Years of impact' },
   { value: '24/7', label: 'Support mindset' },
   { value: '100%', label: 'Community-first approach' },
 ];
