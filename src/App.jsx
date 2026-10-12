@@ -1,5 +1,3 @@
-
-
 import './App.css';
 import NavBar from './components/NavBar';
 import Team from './components/Team';
@@ -7,70 +5,121 @@ import ServiceDetails from './components/ServiceDetails';
 import ContactForm from './components/ContactForm';
 import WhatsappLead from './components/WhatsappLead';
 
+const stats = [
+  { value: '8+', label: 'Years of impact' },
+  { value: '24/7', label: 'Support mindset' },
+  { value: '100%', label: 'Community-first approach' },
+];
+
+const serviceHighlights = ['Consulting and Advisory', 'Community Outreach', 'Support and Assistance'];
 
 function App() {
   return (
     <>
       <NavBar />
       <main>
-        <section id="hero" style={{padding: '4rem 2rem', textAlign: 'center', background: 'linear-gradient(90deg, #e3f2fd 0%, #f5f5f5 100%)'}}>
-        <img
-          src="/favicon.svg"
-          alt="AVS Seva Technologies logo"
-          width="220"
-          height="80"
-          style={{display: 'block', margin: '0 auto 1.25rem'}}
-        />
-        <h1 style={{fontSize: '2.8rem', marginBottom: '1rem'}}>Welcome to AVS Seva Technologies Pvt Ltd</h1>
-          <p style={{fontSize: '1.3rem', maxWidth: 700, margin: '0 auto 1.5rem'}}>
-            Your trusted partner for technology-driven community services and solutions. We empower, support, and uplift organizations through innovative IT programs and dedicated service.
-          </p>
-          <a href="#free-review" style={{background: '#25d366', color: '#05340a', padding: '0.8rem 2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px #25d36633'}}>Free website review</a>
-          <a href="#contact-form" style={{background: '#1a237e', color: '#fff', padding: '0.8rem 2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 500, fontSize: '1.1rem', boxShadow: '0 2px 8px #1a237e22', marginLeft: '0.75rem'}}>Get in Touch</a>
+        <section id="hero" className="hero-section">
+          <div className="hero-copy">
+            <span className="eyebrow">Empowering communities through technology</span>
+            <h1>Transform ideas into meaningful action.</h1>
+            <p>
+              AVS Seva Technologies Pvt Ltd brings together innovation, compassion, and practical
+              solutions to strengthen people, organizations, and communities.
+            </p>
+
+            <div className="hero-actions">
+              <a href="#free-review" className="primary-button">Free website review</a>
+              <a href="#contact-form" className="secondary-button">Get in Touch</a>
+            </div>
+
+            <div className="hero-stats">
+              {stats.map((stat) => (
+                <div className="stat-card" key={stat.label}>
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="hero-visual" aria-label="Brand showcase panel">
+            <div className="glass-panel main-panel">
+              <span className="panel-label">Innovation for change</span>
+              <h3>Community-first digital solutions</h3>
+              <ul>
+                <li>Technology strategy that feels personal</li>
+                <li>Action-driven support for real-world problems</li>
+                <li>Long-term growth with integrity and care</li>
+              </ul>
+            </div>
+            <div className="floating-badge">Trusted by communities</div>
+          </div>
         </section>
 
-        <section id="about" className="section" style={{padding: '3rem 2rem'}}>
-          <h2>About Us</h2>
-          <p style={{fontSize: '1.1rem', maxWidth: 800, margin: '0 auto 1.5rem'}}>
-            AVS Seva Technologies Pvt Ltd is dedicated to providing high-quality technology and community services, focusing on integrity, reliability, and excellence. Our mission is to create positive change and foster growth by connecting people, resources, and opportunities through innovative IT solutions.
+        <section id="about" className="section about-section">
+          <div className="section-heading">
+            <span className="section-kicker">About</span>
+            <h2>Driven by purpose, powered by people.</h2>
+          </div>
+          <p className="section-intro">
+            AVS Seva Technologies Pvt Ltd is dedicated to providing high-quality technology and
+            community services with a focus on integrity, reliability, and excellence. We connect
+            resources, opportunities, and people through practical and impactful IT solutions.
           </p>
-          <div style={{display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center'}}>
-            <div style={{flex: 1, minWidth: 220}}>
-              <h3 style={{color: '#1a237e'}}>Our Mission</h3>
-              <p>To empower individuals, organizations, and communities through accessible, impactful, and sustainable technology services.</p>
+          <div className="info-grid">
+            <div className="info-card">
+              <h3>Our Mission</h3>
+              <p>
+                To empower individuals, organizations, and communities through accessible, impactful,
+                and sustainable technology services.
+              </p>
             </div>
-            <div style={{flex: 1, minWidth: 220}}>
-              <h3 style={{color: '#1a237e'}}>Our Vision</h3>
-              <p>To be a leading force in technology-driven community development, recognized for our commitment, compassion, and results.</p>
+            <div className="info-card">
+              <h3>Our Vision</h3>
+              <p>
+                To be a leading force in technology-driven community development, recognized for our
+                commitment, compassion, and results.
+              </p>
             </div>
-            <div style={{flex: 1, minWidth: 220}}>
-              <h3 style={{color: '#1a237e'}}>CEO</h3>
+            <div className="info-card">
+              <h3>Leadership</h3>
               <p>Amarnath G Rathod</p>
             </div>
           </div>
         </section>
 
-        <section id="services" className="section" style={{padding: '3rem 2rem', background: '#f5f5f5'}}>
-          <h2>Our Services</h2>
-          <ul style={{fontSize: '1.08rem'}}>
-            <li>Consulting and Advisory</li>
-            <li>Community Outreach</li>
-            <li>Support and Assistance</li>
-          </ul>
+        <section id="services" className="section services-overview">
+          <div className="section-heading">
+            <span className="section-kicker">Services</span>
+            <h2>Solutions built for real impact.</h2>
+          </div>
+          <div className="service-grid">
+            {serviceHighlights.map((service, index) => (
+              <div className="service-tile" key={service}>
+                <span className="tile-number">0{index + 1}</span>
+                <h3>{service}</h3>
+              </div>
+            ))}
+          </div>
         </section>
 
         <ServiceDetails />
         <Team />
         <WhatsappLead />
         <ContactForm />
-        <section id="contact-info" className="section" style={{padding: '2rem', textAlign: 'center'}}>
+
+        <section id="contact-info" className="section contact-info">
           <h2>Contact Information</h2>
-          <p>Email: <a href="mailto:rathodamar6541@gmail.com">rathodamar6541@gmail.com</a></p>
-          <p>Phone: <a href="tel:7899396541">7899396541</a></p>
+          <p>
+            Email: <a href="mailto:rathodamar6541@gmail.com">rathodamar6541@gmail.com</a>
+          </p>
+          <p>
+            Phone: <a href="tel:7899396541">7899396541</a>
+          </p>
         </section>
       </main>
     </>
   );
 }
 
-export default App
+export default App;
